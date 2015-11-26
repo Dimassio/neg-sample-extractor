@@ -1,4 +1,5 @@
 # neg-sample-extractor
 
-НИР helper
+НИР helper:
+
 Экстрактор отрицательных сэмплов из картинок
