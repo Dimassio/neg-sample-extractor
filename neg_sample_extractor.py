@@ -1,29 +1,31 @@
 import matplotlib.image as img
 import matplotlib.pyplot as plt
 import numpy as np
-# scimage
+import numpy.random as rd
+import random
+import math
+#scimage
 
 
 def get_alpha(mu, sigma):
-    # todo: return exp(N(mu, sigma^2))
-    return mu
+    return random.gauss(mu, sigma)
 
 
 def get_rand_positions(max_y, max_x, width, height):
-    # todo: return rand(0, max_y - height), rand(0, max_x - width)
-    return 2, 3
+    return rd.randint(0, max_y - height), rd.randint(0, max_x - width)
 
 
 def make_negative_samples_rand_states(image, height, N):
     extracted_samples = []
     bin_levels = []
-    alpha = get_alpha(0.5, 0.1)
+    alpha = math.exp(get_alpha(0.5, 0.1))
     width = height * alpha
     for iter in range(N):
         i, j = get_rand_positions(len(image), len(image[0]), width, height)
-        # todo: extraction
-        # todo: extracted_samples.append(...)
-        # todo: bin_levels.append(...)
+        layer = image[i:i + width]
+        block = [layer[q][j:j + height] for q in range(len(layer))]
+        extracted_samples.append(block)
+        bin_levels.append(get_bin_level(block))
     return extracted_samples, bin_levels
 
 
@@ -73,6 +75,7 @@ def get_pixel_percentage(image):
             else:
                 positive += 1
     return negative / (positive + negative)
+
 
 # No random extraction of negative samples with fixed width and height as a parameters
 def make_negative_samples_fix_width(image, height, min_width=100):
