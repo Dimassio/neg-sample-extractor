@@ -1,11 +1,11 @@
-import matplotlib.image as img
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as rd
 import random
 import math
-#scimage
+from skimage import io
 
+def remove_white_edges(image): # todo:
+    return image
 
 def get_alpha(mu, sigma):
     return random.gauss(mu, sigma)
@@ -15,17 +15,23 @@ def get_rand_positions(max_y, max_x, width, height):
     return rd.randint(0, max_y - height), rd.randint(0, max_x - width)
 
 
-def make_negative_samples_rand_states(image, height, N):
+def make_negative_samples_rand_states(image, height, N, mu, sigma):
     extracted_samples = []
     bin_levels = []
-    alpha = math.exp(get_alpha(0.5, 0.1))
+    alpha = math.exp(get_alpha(mu, sigma))
     width = height * alpha
-    for iter in range(N):
+    iter = 0
+    while iter < N:
         i, j = get_rand_positions(len(image), len(image[0]), width, height)
-        layer = image[i:i + width]
-        block = [layer[q][j:j + height] for q in range(len(layer))]
+        layer = image[i:i + height]
+        block = [layer[q][j:j + width] for q in range(len(layer))]
+        level = get_bin_level(block)
+        if level == -1:  # if level, that we needed between black and white pixels not found
+            continue
+        else:
+            iter += 1
         extracted_samples.append(block)
-        bin_levels.append(get_bin_level(block))
+        bin_levels.append(level)
     return extracted_samples, bin_levels
 
 
@@ -35,14 +41,14 @@ def binarization(image, bin_level):
         vec = []
         for j in range(len(image[i])):
             if image[i][j] >= bin_level:
-                vec.append(0)
-            else:
                 vec.append(255)
+            else:
+                vec.append(0)
         binary_image.append(vec)
     return binary_image
 
 
-# 1. 0.839478641341 - part of white pixels
+# 1. 0.839478641341 - part of white pixels in image of thai words
 # 2. part of white and black pixels must be approximately equal
 def get_bin_level(image):
     level = 1 # todo: bin search?
@@ -51,17 +57,19 @@ def get_bin_level(image):
         for pixel in line:
             pixels[pixel] += 1
     done = False
-    while not done:
-        white = 0
-        black = 0
+    while not done and level <= 255:
+        white = 0.0
+        black = 0.0
         for i in range(level):
             white += pixels[i]
         for i in range(level, 256):
             black += pixels[i]
-        if abs(black - white) < len(image):
+        if abs(black / (white + black) - 0.5) < 0.01:
             done = True
         else:
             level += 1
+    if not done:
+        return -1
     return level
 
 
@@ -103,15 +111,15 @@ def make_negative_samples_fix_width(image, height, min_width=100):
 
 
 def show(image):
-    plt.imshow(image, cmap='Greys')
-    plt.show()
+    io.imshow(np.array(image))
+    io.show()
 
 
 def fread(path):
-    return img.imread(path)
+    return io.imread(path)
 
 
 def fsave(image_list):
     for i in range(len(image_list)):
-        img.imsave("NegSamples/" + str(i) + "_neg.png", np.array(image_list[i]), cmap='Greys')
+        io.imsave("NegSamples/" + str(i) + "_neg.png", np.array(image_list[i]))
 

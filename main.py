@@ -1,16 +1,16 @@
 import neg_sample_extractor as nse
+# todo: tif - doesn't work!!!
 
+image = nse.fread('0.png')
 
-image = nse.fread('21.tif')
-
-nse.show(image)
 # 20 samples
 # 50 is height
-#neg_samples, bin_levels = nse.make_negative_samples_rand_states(image, 50, 20)
+# 0.5 - mu
+# 0.1 - sigma
+neg_samples, bin_levels = nse.make_negative_samples_rand_states(image, 50, 10, 0.5, 0.1)
+neg_samples_binary = []
+for i, sample in enumerate(neg_samples):
+    nse.show(sample)
+    neg_samples_binary.append(nse.remove_white_edges(nse.binarization(sample, bin_levels[i])))
 
-#neg_samples_binary = []
-#for i, sample in enumerate(neg_samples):
-    #nse.show(sample) # todo: make them without white strips at edges!
-    #neg_samples_binary.append(nse.binarization(sample, bin_levels[i]))
-
-#nse.fsave(neg_samples_binary)
+nse.fsave(neg_samples_binary)
