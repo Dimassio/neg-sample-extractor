@@ -2,10 +2,21 @@ import numpy as np
 import numpy.random as rd
 import random
 import math
+
+from scipy import transpose
 from skimage import io
 
-def remove_white_edges(image): # todo:
-    return image
+
+def trim(image):  # 255 white
+    tr_image = transpose(image)
+    start = 0
+    while sum(tr_image[start]) == 255 * len(tr_image[start]):  # condition on i is not needed, because of the balance between white and black
+        start += 1
+    finish = len(tr_image) - 1
+    while sum(tr_image[finish]) == 255 * len(tr_image[finish]):
+        finish -= 1
+    return transpose(tr_image[start: finish + 1])
+
 
 def get_alpha(mu, sigma):
     return random.gauss(mu, sigma)
