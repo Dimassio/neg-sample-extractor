@@ -2,9 +2,19 @@ import numpy as np
 import numpy.random as rd
 import random
 import math
-
+from PIL import Image
+import os
 from scipy import transpose
 from skimage import io
+
+
+def convert_to_jpg(path):
+    outfile = os.path.splitext(path)[0] + ".jpg"
+    if path != outfile:
+        try:
+            Image.open(path).save(outfile)
+        except IOError:
+            print "cannot convert", path
 
 
 def trim(image):  # 255 white
