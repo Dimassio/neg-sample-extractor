@@ -1,11 +1,12 @@
+import math
+import os
+
 import numpy as np
 import numpy.random as rd
-import random
-import math
 from PIL import Image
-import os
 from scipy import transpose
 from skimage import io
+from sklearn import mixture
 
 
 def convert_to_jpg(path):
@@ -20,7 +21,8 @@ def convert_to_jpg(path):
 def trim(image):  # 255 white
     tr_image = transpose(image)
     start = 0
-    while sum(tr_image[start]) == 255 * len(tr_image[start]):  # condition on i is not needed, because of the balance between white and black
+    while sum(tr_image[start]) == 255 * len(tr_image[start]):
+        # condition on i is not needed, because of the balance between white and black
         start += 1
     finish = len(tr_image) - 1
     while sum(tr_image[finish]) == 255 * len(tr_image[finish]):
@@ -28,18 +30,27 @@ def trim(image):  # 255 white
     return transpose(tr_image[start: finish + 1])
 
 
-def get_alpha(mu, sigma):
-    return random.gauss(mu, sigma)
+def get_gmm_model(mu1, sigma1, mu2, sigma2):
+    np.random.seed()
+    mix_model = mixture.GMM(n_components=2)
+    obs = np.concatenate((sigma1 * np.random.randn(300, 1) + mu1, sigma2 * np.random.randn(300, 1) + mu2))
+    mix_model.fit(obs)
+    return mix_model
+
+
+def get_alpha(model):
+    return model.sample()
 
 
 def get_rand_positions(max_y, max_x, width, height):
     return rd.randint(0, max_y - height), rd.randint(0, max_x - width)
 
 
-def make_negative_samples_rand_states(image, height, N, mu, sigma):
+def make_negative_samples_rand_states(image, height, N, mu1, sigma1, mu2, sigma2):
     extracted_samples = []
     bin_levels = []
-    alpha = math.exp(get_alpha(mu, sigma))
+    model = get_gmm_model(mu1, sigma1, mu2, sigma2)
+    alpha = math.exp(get_alpha(model))
     width = height * alpha
     iter = 0
     while iter < N:
