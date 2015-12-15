@@ -1,15 +1,19 @@
+import os.path
+
 import neg_sample_extractor as nse
 
 # 49743 of positive
-# 975 of negative
+# 954 of negative
 
-number_of_samples = 51
+number_of_samples = 52
 
-for iter in range(1011):
-    # todo: check if file exists
+for iter in range(1012):
+
     print "Now " + str(iter) + " image"
 
     file_path = "Done/Negative/" + str(iter) + ".tif"
+    if not os.path.exists(file_path):
+        continue
     nse.convert_to_jpg(file_path, "Done/Jpg/" + str(iter) + ".jpg")
     image = nse.fread("Done/Jpg/" + str(iter) + ".jpg")
     # nse.show(image)
