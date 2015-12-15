@@ -1,5 +1,4 @@
 import math
-import os
 
 import numpy as np
 import numpy.random as rd
@@ -9,13 +8,12 @@ from skimage import io
 from sklearn import mixture
 
 
-def convert_to_jpg(path):
-    outfile = os.path.splitext(path)[0] + ".jpg"
-    if path != outfile:
+def convert_to_jpg(src, dest):
+    if src != dest:
         try:
-            Image.open(path).save(outfile)
+            Image.open(src).save(dest)
         except IOError:
-            print "cannot convert", path
+            print "cannot convert", src
 
 
 def trim(image):  # 255 white
@@ -151,7 +149,6 @@ def fread(path):
     return io.imread(path)
 
 
-def fsave(image_list):
+def fsave(image_list, num):
     for i in range(len(image_list)):
-        io.imsave("NegSamples/" + str(i) + "_neg.png", np.array(image_list[i]))
-
+        io.imsave("NegSamples/" + str(num) + "_" + str(i) + ".png", np.array(image_list[i]))
