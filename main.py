@@ -2,10 +2,10 @@ import os.path
 
 import neg_sample_extractor as nse
 
-# 49743 of positive
-# 954 of negative
+# ~49743 of positive
+# ~954 of negative
 
-number_of_samples = 52
+number_of_samples = 58
 
 for iter in range(1012):
 

@@ -51,17 +51,24 @@ def make_negative_samples_rand_states(image, height, N, mu1, sigma1, mu2, sigma2
     alpha = math.exp(get_alpha(model))
     width = height * alpha
     iter = 0
+    counter = 0
     while iter < N:
+        if counter > 500:  # we can't find anything
+            break
+        if len(image) <= height or len(image[0]) <= width:  # source image too small
+            break
         i, j = get_rand_positions(len(image), len(image[0]), width, height)
         layer = image[i:i + height]
         block = [layer[q][j:j + width] for q in range(len(layer))]
         level = get_bin_level(block)
         if level == -1:  # if level, that we needed between black and white pixels not found
+            counter += 1
             continue
         else:
             iter += 1
         extracted_samples.append(block)
         bin_levels.append(level)
+        counter += 1
     return extracted_samples, bin_levels
 
 
