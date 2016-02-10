@@ -28,7 +28,7 @@ def get_positive_elongations(src):
     print "getting elongations..."
     result = []
     counter = 0
-    for iter in range(number_of_positive_samples):
+    for iter in range(10000):  # number_of_positive_samples):
         if not os.path.exists(src + str(iter) + ".tif"):
             continue
         counter += 1
@@ -37,7 +37,7 @@ def get_positive_elongations(src):
         src_path = src + str(iter) + ".tif"
         convert_to_jpg(src_path, dest_path)
         image = fread(dest_path)
-        result.append(math.log(float(len(image[0])) / float(len(image))))
+        result.append([math.log(float(len(image[0])) / float(len(image)))])  # brackets only for using GMM
     return result
 
 
