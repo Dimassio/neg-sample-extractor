@@ -14,31 +14,37 @@ number_of_positive_samples = 61120
 
 
 def print_elong_diagram(elongations):
-    print "printing histogram of elongations..."
-    plt.hist(np.array(elongations))
-    plt.title("Elongations of positive samples")
-    plt.xlabel("Elongation")
+    print "printing histogram..."
+    bins = np.linspace(-3, 0, 100)
+    plt.hist(np.array(elongations), bins)
+    plt.title("Ln(Contrast)")
+    plt.xlabel("Value")
     plt.ylabel("Frequency")
     fig = plt.gcf()
     py.sign_in('Dimassio', 'ebukn0pzpq')
-    plot_url = py.plot_mpl(fig, filename='elongations-histogram')
+    plot_url = py.plot_mpl(fig, filename='Contrast')
 
 
 def get_positive_elongations(src):
     print "getting elongations..."
     result = []
+    pixels = []
     counter = 0
-    for iter in range(10000):  # number_of_positive_samples):
+    for iter in range(number_of_positive_samples):
         if not os.path.exists(src + str(iter) + ".tif"):
             continue
         counter += 1
-        print counter
-        dest_path = "Temp/" + str(iter) + ".jpg"
+        if counter % 1000 == 0:
+            print counter
+        dest_path = "../Data/Temp/" + str(iter) + ".jpg"
         src_path = src + str(iter) + ".tif"
         convert_to_jpg(src_path, dest_path)
         image = fread(dest_path)
         result.append([math.log(float(len(image[0])) / float(len(image)))])  # brackets only for using GMM
-    return result
+        percentage = get_pixel_percentage(image)
+        if percentage > 0:
+            pixels.append(math.log(percentage))  # black / (black + white)
+    return result, pixels
 
 
 def convert_to_jpg(src, dest):
@@ -49,7 +55,7 @@ def convert_to_jpg(src, dest):
             print "cannot convert", src
 
 
-def trim(image):  # 255 white
+def trim(image):  # 255 - white
     tr_image = transpose(image)
     start = 0
     while sum(tr_image[start]) == 255 * len(tr_image[start]):
@@ -61,10 +67,10 @@ def trim(image):  # 255 white
     return transpose(tr_image[start: finish + 1])
 
 
-def get_gmm_model(elongations):
+def get_gmm_model(data, n_comp):
     np.random.seed()
-    mix_model = mixture.GMM(n_components=1)  # according to histogram
-    mix_model.fit(elongations)
+    mix_model = mixture.GMM(n_components=n_comp)
+    mix_model.fit(data)
     return mix_model
 
 
@@ -73,39 +79,52 @@ def get_alpha(model):
 
 
 def get_rand_positions(max_y, max_x, width, height):
+    '''
+    :param max_y: y axis max image size
+    :param max_x: x axis max image size
+    :param width: width of block we want
+    :param height: height of block we want
+    :return: start position of extracted block
+    '''
+
     return rd.randint(0, max_y - height), rd.randint(0, max_x - width)
 
 
-def make_negative_samples_rand_states(image, height, N, elongations):
+def make_negative_samples_rand_states(image, height, N, elongations, pixel_percentages):
     '''
     :param image: input image
     :param height: height we want
     :param N: number of samples we want
     :param elongations: set of elongations
+    :param pixel_percentages: set of pixels percentages (black / (black + white))
     :return: extracted samples and their binariation levels
     '''
 
     extracted_samples = []
     bin_levels = []
-    model = get_gmm_model(elongations)
+    model = get_gmm_model(elongations, 2)  # according to elongation histogram
     alpha = math.exp(get_alpha(model))
     width = height * alpha
+
+    pixels_model = get_gmm_model(pixel_percentages, 1)  # according to pixel percentage histogram
+    percentage = math.exp(get_alpha(pixels_model))
+
     iter = 0
     counter = 0
     while iter < N:
-        if counter > 500:  # we can't find anything
+        if counter > 500:  # if we can't find anything
             break
         if len(image) <= height or len(image[0]) <= width:  # source image too small
             break
         i, j = get_rand_positions(len(image), len(image[0]), width, height)
         layer = image[i:i + height]
         block = [layer[q][j:j + width] for q in range(len(layer))]  # current subsample from picture
-        level = get_bin_level(block)
+        level = get_bin_level(block, percentage)
         if level == -1:  # if level, that we needed between black and white pixels not found
             counter += 1
             continue
         else:
-            iter += 1  # found subsample
+            iter += 1  # we found subsample
         extracted_samples.append(block)
         bin_levels.append(level)
     return extracted_samples, bin_levels
@@ -124,9 +143,7 @@ def binarization(image, bin_level):
     return binary_image
 
 
-# 1. 0.839478641341 - part of white pixels in image of thai words
-# 2. part of white and black pixels must be approximately equal
-def get_bin_level(image):
+def get_bin_level(image, percentage):
     pixels = [0 for i in range(0, 256)]
     for line in image:
         for pixel in line:
@@ -140,7 +157,7 @@ def get_bin_level(image):
             white += pixels[i]
         for i in range(level, 256):
             black += pixels[i]
-        if abs(float(black) / float(white + black) - 0.839478641341) < 0.05:  # todo: bin level
+        if abs(float(black) / float(white + black) - percentage) < 0.01:  # todo: see, if it is ok!
             done = True
         else:
             level += 1
@@ -158,7 +175,7 @@ def get_pixel_percentage(image):
                 negative += 1
             else:
                 positive += 1
-    return negative / (positive + negative)
+    return float(negative) / float(positive + negative)
 
 
 def show(image):
@@ -172,4 +189,4 @@ def fread(path):
 
 def fsave(image_list, num):
     for i in range(len(image_list)):
-        io.imsave("Pictures/" + str(num) + "_" + str(i) + ".png", np.array(image_list[i]))
+        io.imsave("../Data/Pictures/" + str(num) + "_" + str(i) + ".png", np.array(image_list[i]))
