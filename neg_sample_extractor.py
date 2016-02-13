@@ -43,7 +43,7 @@ def get_positive_elongations(src):
         result.append([math.log(float(len(image[0])) / float(len(image)))])  # brackets only for using GMM
         percentage = get_pixel_percentage(image)
         if percentage > 0:
-            pixels.append(math.log(percentage))  # black / (black + white)
+            pixels.append([math.log(percentage)])  # black / (black + white)  # brackets only for using GMM
     return result, pixels
 
 
@@ -157,7 +157,7 @@ def get_bin_level(image, percentage):
             white += pixels[i]
         for i in range(level, 256):
             black += pixels[i]
-        if abs(float(black) / float(white + black) - percentage) < 0.01:  # todo: see, if it is ok!
+        if abs(float(white) / float(white + black) - percentage) < 0.01:
             done = True
         else:
             level += 1

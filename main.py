@@ -15,11 +15,11 @@ for iter in range(number_of_pictures):
 
     print "Now " + str(iter) + " image"
 
-    file_path = "Negative/" + str(iter) + ".tif"
+    file_path = "../Data/Negative/" + str(iter) + ".tif"
     if not os.path.exists(file_path):
         continue
-    nse.convert_to_jpg(file_path, "Jpg/" + str(iter) + ".jpg")
-    image = nse.fread("Jpg/" + str(iter) + ".jpg")
+    nse.convert_to_jpg(file_path, "../Data/Jpg/" + str(iter) + ".jpg")
+    image = nse.fread("../Data/Jpg/" + str(iter) + ".jpg")
     neg_samples, bin_levels = nse.make_negative_samples_rand_states(image, average_height, number_of_samples,
                                                                     elongations, pixel_percentages)
     # binarization
